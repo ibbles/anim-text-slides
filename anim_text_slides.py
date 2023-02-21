@@ -40,6 +40,8 @@ text_duration = 5000.0  # ms
 text_start_time = pygame.time.get_ticks() + 2000  # ms
 
 
+max_line_height = 0
+
 class Line:
    text: str
    row: int
@@ -48,18 +50,24 @@ class Line:
    rect: pygame.Rect
 
    def __init__(self, text: str, row: int, color: Tuple[int, int, int]):
+       global max_line_height
        self.text = text
        self.row = row
        self.color = color
        self.surface, self.rect = font.render(text, color)
+       max_line_height = max(max_line_height, self.rect.height)
 
 @dataclass
 class Slide:
     lines: List[Line]
 
-#@dataclass
-#class SlideDeck:
-#    slides: List[Slide]
+    def shown(self, slide_index: int):
+        pass
+
+    def render(self):
+        for line in self.lines:
+            display.blit(line.surface, (100, 100 + max_line_height * line.row))
+
 
 @dataclass
 class LineTransition:
@@ -68,29 +76,49 @@ class LineTransition:
 
 @dataclass
 class SlideTransition:
-    start_slide: Slide
-    end_slide: Slide
     line_transitions: List[LineTransition]
+
+    def shown(self, slide_index: int):
+        global slide_deck
+        self.index = slide_index
+        self.start_time = pygame.time.get_ticks()
+        self.start_slide: Slide = slide_deck[slide_index - 1]
+        self.end_slide: Slide = slide_deck[slide_index + 1]
+
+    def render(self):
+        now = pygame.time.get_ticks()
+        for transition in self.line_transitions:
+            start_height = 100 + max_line_height * transition.start_line_index
+            end_height = 100 + max_line_height * transition.end_line_index
+            t = max(0.0, min(1.0, (now - self.start_time) / 1000))
+            height = start_height + t * (end_height - start_height)
+            display.blit(self.start_slide.lines[transition.start_line_index].surface, (100, height))
+        if now >= self.start_time + 1000:
+            change_slide(self.index + 1)
 
 white = (255, 255, 255)
 
-slide_1 = Slide([
-    Line("First line", 0, white),
-    Line("Second line", 1, white), 
-    Line("Third line", 2, white)])
-slide_2 = Slide([
-    Line("Alpha line", 0, white),
-    Line("Beta line", 1, white),
-    Line("Gamma line", 2, white)])
-slide_3 = Slide([
-    Line("Line 1", 0, white),
-    Line("Line 2", 1, white),
-    Line("Line 3", 2, white)])
+slide_deck = [
+    Slide([
+        Line("int main()", 0, white),
+        Line("{", 1, white),
+        Line("}", 2, white)]),
+    SlideTransition([
+        LineTransition(0, 0),
+        LineTransition(1, 1),
+        LineTransition(2, 3)]),
+    Slide([
+        Line("int main()", 0, white),
+        Line("{", 1, white),
+        Line("    doWork();", 2, white),
+        Line("}", 3, white)])]
 
-#slide_deck = SlideDeck([slide_1, slide_2, slide_3])
-slide_deck = [slide_1, slide_2, slide_3]
 
 current_slide: int = 0
+def change_slide(new_slide: int):
+    global current_slide
+    current_slide = new_slide
+    slide_deck[current_slide].shown(current_slide)
 
 # Main loop.
 request_quit = False
@@ -104,9 +132,9 @@ while not request_quit:
             if event.key == pygame.K_ESCAPE:
                 request_quit = True
             elif event.key == pygame.K_SPACE or event.key == pygame.K_RIGHT:
-                current_slide = (current_slide + 1) % len(slide_deck)
+               change_slide((current_slide + 1) % len(slide_deck))
             elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_LEFT:
-                current_slide = (current_slide - 1) if current_slide > 0 else len(slide_deck) - 1
+                change_slide((current_slide - 1) if current_slide > 0 else len(slide_deck) - 1)
 
     # Update game state.
     # now = pygame.time.get_ticks()
@@ -119,10 +147,7 @@ while not request_quit:
     # display.fill(((seconds * 10) % 255, 0, 0))
     display.fill((0, 0, 0))
     slide = slide_deck[current_slide]
-    y_offset = 0
-    for line in slide.lines:
-        display.blit(line.surface, (100, 100 + y_offset))
-        y_offset += 1.3 * line.rect.height
+    slide.render()
 
     #display.blit(text_surface, text_location)
     pygame.display.flip()
