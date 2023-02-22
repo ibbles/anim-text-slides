@@ -1,6 +1,8 @@
 import pygame
 import pygame.freetype
 
+import io
+
 from dataclasses import dataclass
 from typing import List, Tuple
 
@@ -98,20 +100,53 @@ class SlideTransition:
 
 white = (255, 255, 255)
 
-slide_deck = [
-    Slide([
-        Line("int main()", 0, white),
-        Line("{", 1, white),
-        Line("}", 2, white)]),
-    SlideTransition([
-        LineTransition(0, 0),
-        LineTransition(1, 1),
-        LineTransition(2, 3)]),
-    Slide([
-        Line("int main()", 0, white),
-        Line("{", 1, white),
-        Line("    doWork();", 2, white),
-        Line("}", 3, white)])]
+def parse_slide(lines, i, slide_deck):
+    line = lines[i]
+    assert line.startswith("#s ")
+    title = line[3:]  # TODO: Use title.
+    slide: Slide = Slide([])
+    row: int = 0
+    for l in range(i+1, len(lines)):
+        line = lines[l]
+        if line.startswith("#s ") or line.startswith("#t "):
+            slide_deck.append(slide)
+            return l
+        slide.lines.append(Line(line, row, white))
+        row += 1
+    slide_deck.append(slide)
+    return l
+
+def parse_transition(lines, i, slide_deck):
+    line = lines[i]
+    assert line.startswith("#t ")
+    line = line[3:]
+    pairs = line.split(" ")
+    transition: SlideTransition = SlideTransition([])
+    for pair in pairs:
+        start_end = pair.split(",")
+        start = int(start_end[0])
+        end = int(start_end[1])
+        transition.line_transitions.append(LineTransition(start, end))
+    slide_deck.append(transition)
+    return i + 1
+
+def parse(lines):
+    slide_deck = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith("#s "):
+            i = parse_slide(lines, i, slide_deck)
+        elif line.startswith("#t "):
+            i = parse_transition(lines, i, slide_deck)
+        elif line.strip() == "":
+            i = i + 1
+        else:
+            raise ValueError(f"Parse error at line {i}: Expected a new slide or transition, got '{line}'.")
+    return slide_deck
+
+with io.open("./test_file.ats") as f:
+    slide_deck = parse(f.read().splitlines())
 
 
 current_slide: int = 0

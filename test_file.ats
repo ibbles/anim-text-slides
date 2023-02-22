@@ -1,0 +1,13 @@
+#s Slide 1
+int main()
+{
+}
+
+#t 0,0 1,1 2,3
+
+#s Slide 2
+int main()
+{
+    stepForward();
+}
+
