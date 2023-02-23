@@ -12,7 +12,7 @@ from typing import List, Tuple
 
 # Initialize pygame.
 pygame.init()
-pygame.display.set_mode((1920, 1080))
+pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 pygame.display.set_caption("Animated Text Slides")
 display = pygame.display.get_surface()
