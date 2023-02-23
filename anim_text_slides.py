@@ -73,8 +73,13 @@ class Line:
 class Slide:
     lines: List[Line]
 
-    def shown(self, slide_index: int):
+    def shown(self, slide_index: int, direction: int):
         self.start_time = pygame.time.get_ticks()
+        if direction != 1:
+            # Only run animations when stepping forward.
+            for line in self.lines:
+                line.fade_in = False
+            return
 
     def render(self):
         now = pygame.time.get_ticks()
@@ -94,8 +99,15 @@ class LineTransition:
 class SlideTransition:
     line_transitions: List[LineTransition]
 
-    def shown(self, slide_index: int):
+    def shown(self, slide_index: int, direction: int):
         global slide_deck
+        if direction != 1:
+            # Only run animations when stepping forward.
+            if direction == -1:
+                change_slide(slide_index - 1, direction)
+            if direction == 0:
+                change_slide(slide_index + 1, direction)
+            return
         self.index = slide_index
         self.start_time = pygame.time.get_ticks()
         self.start_slide: Slide = slide_deck[slide_index - 1]
@@ -115,7 +127,7 @@ class SlideTransition:
             height = start_height + t * (end_height - start_height)
             display.blit(self.start_slide.lines[transition.start_line_index].surface, (100, height))
         if now >= self.start_time + 1000:
-            change_slide(self.index + 1)
+            change_slide(self.index + 1, 1)
 
 white = (255, 255, 255)
 gray = (128, 128, 128)
@@ -171,12 +183,20 @@ with io.open(sys.argv[1]) as f:
 
 
 current_slide: int = 0
-def change_slide(new_slide: int):
+def change_slide(new_slide: int, direction: int):
+    """Change to a new slide.
+
+    The new slide has its shown method called and will receive render calls
+    every frame until another slide is changed to.
+
+    new_slide: Index into slide_deck.
+    direction: 1 for moving forward, -1 for moving backwards, 0 for jump.
+    """
     global current_slide
     current_slide = new_slide
-    slide_deck[current_slide].shown(current_slide)
+    slide_deck[current_slide].shown(current_slide, direction)
 
-change_slide(0)
+change_slide(0, 0)
 
 # Main loop.
 request_quit = False
@@ -190,9 +210,9 @@ while not request_quit:
             if event.key == pygame.K_ESCAPE:
                 request_quit = True
             elif event.key == pygame.K_SPACE or event.key == pygame.K_RIGHT:
-               change_slide((current_slide + 1) % len(slide_deck))
+               change_slide((current_slide + 1) % len(slide_deck), 1)
             elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_LEFT:
-                change_slide((current_slide - 1) if current_slide > 0 else len(slide_deck) - 1)
+                change_slide((current_slide - 1) if current_slide > 0 else len(slide_deck) - 1, -1)
 
     # Update game state.
     # now = pygame.time.get_ticks()
