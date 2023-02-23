@@ -62,6 +62,9 @@ class Line:
        self.color = color
        self.surface, self.rect = font.render(text, color)
        max_line_height = max(max_line_height, self.rect.height)
+    def set_color(self, color: Tuple[int, int, int]):
+        self.color = color
+        self.surface, self.rect = font.render(self.text, color)
 
 @dataclass
 class Slide:
@@ -90,6 +93,9 @@ class SlideTransition:
         self.start_time = pygame.time.get_ticks()
         self.start_slide: Slide = slide_deck[slide_index - 1]
         self.end_slide: Slide = slide_deck[slide_index + 1]
+        for row in range(len(self.end_slide.lines)):
+            if any(t.end_line_index == row for t in self.line_transitions):
+                self.end_slide.lines[row].set_color(gray)
 
     def render(self):
         now = pygame.time.get_ticks()
@@ -103,6 +109,7 @@ class SlideTransition:
             change_slide(self.index + 1)
 
 white = (255, 255, 255)
+gray = (128, 128, 128)
 
 def parse_slide(lines, i, slide_deck):
     line = lines[i]
