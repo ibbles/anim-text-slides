@@ -146,7 +146,7 @@ def parse(lines):
         elif line.strip() == "":
             i = i + 1
         else:
-            raise ValueError(f"Parse error at line {i}: Expected a new slide or transition, got '{line}'.")
+            raise ValueError(f"Anim Text Slides: Parse error at line {i}: Expected a new slide or transition, got '{line}'.")
     return slide_deck
 
 
