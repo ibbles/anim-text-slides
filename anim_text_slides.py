@@ -118,7 +118,7 @@ def parse_slide(lines, i, slide_deck):
         slide.lines.append(Line(line, row, white))
         row += 1
     slide_deck.append(slide)
-    return l
+    return l + 1
 
 def parse_transition(lines, i, slide_deck):
     line = lines[i]
