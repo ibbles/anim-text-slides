@@ -49,19 +49,20 @@ text_start_time = pygame.time.get_ticks() + 2000  # ms
 max_line_height = 0
 
 class Line:
-   text: str
-   row: int
-   color: Tuple[int, int, int]
-   surface: pygame.Surface
-   rect: pygame.Rect
+    text: str
+    row: int
+    color: Tuple[int, int, int]
+    surface: pygame.Surface
+    rect: pygame.Rect
 
-   def __init__(self, text: str, row: int, color: Tuple[int, int, int]):
-       global max_line_height
-       self.text = text
-       self.row = row
-       self.color = color
-       self.surface, self.rect = font.render(text, color)
-       max_line_height = max(max_line_height, self.rect.height)
+    def __init__(self, text: str, row: int, color: Tuple[int, int, int]):
+        global max_line_height
+        self.text = text
+        self.row = row
+        self.color = color
+        self.surface, self.rect = font.render(text, color)
+        max_line_height = max(max_line_height, self.rect.height)
+
     def set_color(self, color: Tuple[int, int, int]):
         self.color = color
         self.surface, self.rect = font.render(self.text, color)
