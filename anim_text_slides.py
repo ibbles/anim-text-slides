@@ -52,6 +52,7 @@ class Line:
     text: str
     row: int
     color: Tuple[int, int, int]
+    fade_in: bool
     surface: pygame.Surface
     rect: pygame.Rect
 
@@ -60,6 +61,7 @@ class Line:
         self.text = text
         self.row = row
         self.color = color
+        self.fade_in = False
         self.surface, self.rect = font.render(text, color)
         max_line_height = max(max_line_height, self.rect.height)
 
@@ -72,10 +74,14 @@ class Slide:
     lines: List[Line]
 
     def shown(self, slide_index: int):
-        pass
+        self.start_time = pygame.time.get_ticks()
 
     def render(self):
+        now = pygame.time.get_ticks()
+        alpha = 255 * max(0.0, min(1.0, (now - self.start_time) / 500))
         for line in self.lines:
+            if line.fade_in:
+                line.surface.set_alpha(alpha)
             display.blit(line.surface, (100, 100 + max_line_height * line.row))
 
 
@@ -97,6 +103,8 @@ class SlideTransition:
         for row in range(len(self.end_slide.lines)):
             if any(t.end_line_index == row for t in self.line_transitions):
                 self.end_slide.lines[row].set_color(gray)
+            else:
+                self.end_slide.lines[row].fade_in = True
 
     def render(self):
         now = pygame.time.get_ticks()
@@ -167,6 +175,8 @@ def change_slide(new_slide: int):
     global current_slide
     current_slide = new_slide
     slide_deck[current_slide].shown(current_slide)
+
+change_slide(0)
 
 # Main loop.
 request_quit = False
