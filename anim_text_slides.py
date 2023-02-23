@@ -4,6 +4,8 @@ import pygame
 import pygame.freetype
 
 import io
+import sys
+
 
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -147,7 +149,8 @@ def parse(lines):
             raise ValueError(f"Parse error at line {i}: Expected a new slide or transition, got '{line}'.")
     return slide_deck
 
-with io.open("./test_file.ats") as f:
+
+with io.open(sys.argv[1]) as f:
     slide_deck = parse(f.read().splitlines())
 
 
