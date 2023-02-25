@@ -33,7 +33,8 @@ wanted_fonts = [
     "notosansmonocjkkr",
     "notosansmonocjkhk",
     "notosansmonocjkjp",
-    "notomono"]
+    "notomono",
+]
 
 fonts = [f for f in pygame.font.get_fonts() if f in wanted_fonts]
 font_name = fonts[0] if fonts else None
@@ -49,6 +50,7 @@ text_start_time = pygame.time.get_ticks() + 2000  # ms
 
 max_line_height = 0
 
+
 class Title:
     text: str
     color: Tuple[int, int, int]
@@ -59,6 +61,7 @@ class Title:
         self.text = text
         self.color = color
         self.surface, self.rect = title_font.render(text, color)
+
 
 class Line:
     text: str
@@ -80,6 +83,7 @@ class Line:
     def set_color(self, color: Tuple[int, int, int]):
         self.color = color
         self.surface, self.rect = font.render(self.text, color)
+
 
 @dataclass
 class Slide:
@@ -108,6 +112,7 @@ class Slide:
 class LineTransition:
     start_line_index: int
     end_line_index: int
+
 
 @dataclass
 class SlideTransition:
@@ -149,12 +154,17 @@ class SlideTransition:
             end_height = 100 + max_line_height * transition.end_line_index
             t = max(0.0, min(1.0, (now - self.start_time) / 1000))
             height = start_height + t * (end_height - start_height)
-            display.blit(self.start_slide.lines[transition.start_line_index].surface, (100, height))
+            display.blit(
+                self.start_slide.lines[transition.start_line_index].surface,
+                (100, height),
+            )
         if now >= self.start_time + 1000:
             change_slide(self.index + 1, 1)
 
+
 white = (255, 255, 255)
 gray = (128, 128, 128)
+
 
 def parse_slide(lines, i, slide_deck):
     line = lines[i]
@@ -162,7 +172,7 @@ def parse_slide(lines, i, slide_deck):
     title = line[3:]  # TODO: Use title.
     slide: Slide = Slide(Title(title, white), [])
     row: int = 0
-    for l in range(i+1, len(lines)):
+    for l in range(i + 1, len(lines)):
         line = lines[l]
         if line.startswith("#s ") or line.startswith("#t "):
             slide_deck.append(slide)
@@ -171,6 +181,7 @@ def parse_slide(lines, i, slide_deck):
         row += 1
     slide_deck.append(slide)
     return l + 1
+
 
 def parse_transition(lines, i, slide_deck):
     line = lines[i]
@@ -186,6 +197,7 @@ def parse_transition(lines, i, slide_deck):
     slide_deck.append(transition)
     return i + 1
 
+
 def parse(lines):
     slide_deck = []
     i = 0
@@ -198,7 +210,10 @@ def parse(lines):
         elif line.strip() == "":
             i = i + 1
         else:
-            raise ValueError(f"Anim Text Slides: Parse error at line {i}: Expected a new slide or transition, got '{line}'.")
+            raise ValueError(
+                f"Anim Text Slides: Parse error at line {i}: Expected a new slide or"
+                f" transition, got '{line}'."
+            )
     return slide_deck
 
 
@@ -207,6 +222,8 @@ with io.open(sys.argv[1]) as f:
 
 
 current_slide: int = 0
+
+
 def change_slide(new_slide: int, direction: int):
     """Change to a new slide.
 
@@ -219,6 +236,7 @@ def change_slide(new_slide: int, direction: int):
     global current_slide
     current_slide = new_slide
     slide_deck[current_slide].shown(current_slide, direction)
+
 
 change_slide(0, 0)
 
@@ -234,9 +252,12 @@ while not request_quit:
             if event.key == pygame.K_ESCAPE:
                 request_quit = True
             elif event.key == pygame.K_SPACE or event.key == pygame.K_RIGHT:
-               change_slide((current_slide + 1) % len(slide_deck), 1)
+                change_slide((current_slide + 1) % len(slide_deck), 1)
             elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_LEFT:
-                change_slide((current_slide - 1) if current_slide > 0 else len(slide_deck) - 1, -1)
+                change_slide(
+                    (current_slide - 1) if current_slide > 0 else len(slide_deck) - 1,
+                    -1,
+                )
 
     # Update game state.
     # now = pygame.time.get_ticks()
@@ -251,7 +272,7 @@ while not request_quit:
     slide = slide_deck[current_slide]
     slide.render()
 
-    #display.blit(text_surface, text_location)
+    # display.blit(text_surface, text_location)
     pygame.display.flip()
 
     # Wait for next frame.
@@ -259,4 +280,3 @@ while not request_quit:
 
 # Done.
 pygame.quit()
-
