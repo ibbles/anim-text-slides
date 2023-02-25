@@ -180,32 +180,47 @@ def parse_slide(lines, i, slide_deck):
     assert line.startswith("#s ")
     title = line[3:]
     slides: List[Slide] = [Slide(Title(title, white), [])]
+    transitions: List[SlideTransition] = []
 
-    def ensure_size(n: int):
-        assert len(slides) > 0  # Must have at least one slide to copy lines from.
-        for i in range(len(slides), n + 1):
+    def ensure_num_slides(n: int):
+        # Must have at least one slide to copy lines from and for transitions to work.
+        assert len(slides) > 0
+        for i in range(len(slides), n):
             slides.append(Slide(Title(title, white), slides[-1].lines[:]))
+            transitions.append(
+                SlideTransition(
+                    [LineTransition(row, row) for row in range(len(slides[-1].lines))]
+                )
+            )
 
-    for l in range(i + 1, len(lines)):
-        line = lines[l]
+    for line_index in range(i + 1, len(lines)):
+        line = lines[line_index]
         if line.startswith("#sl,"):
             separator = line.find(" ")
             separator = separator if separator >= 0 else len(line)
             properties = line[4:separator].split(",")
             text = line[separator + 1 :]
             slide_nr = int(properties[0])
-            ensure_size(slide_nr)
+            ensure_num_slides(slide_nr + 1)  # +1 because 0-based indexing.
             for i in range(slide_nr, len(slides)):
+                if i < len(transitions):
+                    transitions[i].line_transitions.append(
+                        LineTransition(len(slides[i].lines), len(slides[i + 1].lines))
+                    )
                 slides[i].lines.append(Line(text, white))
         elif line.startswith("#s ") or line.startswith("#t "):
-            l -= 1  # So that the +1 at the return gets us back to this line.
+            line_index -= 1  # So that the +1 at the return gets us back to this line.
             break
         else:
             # slide_nr = 0 implicitly, i.e. add this line to all slides.
             for slide in slides:
                 slide.lines.append(Line(line, white))
-    slide_deck.extend(slides)
-    return l + 1
+    # Interleave slides and transitions.
+    new_slides = [None] * (len(slides) + len(transitions))
+    new_slides[::2] = slides
+    new_slides[1::2] = transitions
+    slide_deck.extend(new_slides)
+    return line_index + 1
 
 
 def parse_transition(lines, i, slide_deck):
