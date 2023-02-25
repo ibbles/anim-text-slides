@@ -1,3 +1,16 @@
+#s Clock Tick
+#sl,0 void main()
+#sl,1 {
+#sl,3   if (!do_some_checks())
+#sl,3   {
+#sl,3     return -1;
+#sl,3   };
+#sl,3
+#sl,2   int result = call_some_function();
+#sl,2   return result > 0;
+#sl,1 }
+
+
 #s Slide 1
 int main()
 {

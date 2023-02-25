@@ -66,16 +66,14 @@ class Title:
 
 class Line:
     text: str
-    row: int
     color: Tuple[int, int, int]
     fade_in: bool
     surface: pygame.Surface
     rect: pygame.Rect
 
-    def __init__(self, text: str, row: int, color: Tuple[int, int, int]):
+    def __init__(self, text: str, color: Tuple[int, int, int]):
         global max_line_height
         self.text = text
-        self.row = row
         self.color = color
         self.fade_in = False
         self.surface, self.rect = font.render(text, color)
@@ -103,10 +101,10 @@ class Slide:
         display.blit(self.title.surface, (10, 10))
         now = pygame.time.get_ticks()
         alpha = 255 * max(0.0, min(1.0, (now - self.start_time) / 500))
-        for line in self.lines:
+        for row, line in enumerate(self.lines):
             if line.fade_in:
                 line.surface.set_alpha(alpha)
-            display.blit(line.surface, (100, 100 + max_line_height * line.row))
+            display.blit(line.surface, (100, 100 + max_line_height * row))
 
 
 @dataclass
@@ -170,17 +168,33 @@ gray = (128, 128, 128)
 def parse_slide(lines, i, slide_deck):
     line = lines[i]
     assert line.startswith("#s ")
-    title = line[3:]  # TODO: Use title.
-    slide: Slide = Slide(Title(title, white), [])
-    row: int = 0
+    title = line[3:]
+    slides: List[Slide] = [Slide(Title(title, white), [])]
+
+    def ensure_size(n: int):
+        assert len(slides) > 0  # Must have at least one slide to copy lines from.
+        for i in range(len(slides), n + 1):
+            slides.append(Slide(Title(title, white), slides[-1].lines[:]))
+
     for l in range(i + 1, len(lines)):
         line = lines[l]
-        if line.startswith("#s ") or line.startswith("#t "):
-            slide_deck.append(slide)
-            return l
-        slide.lines.append(Line(line, row, white))
-        row += 1
-    slide_deck.append(slide)
+        if line.startswith("#sl,"):
+            separator = line.find(" ")
+            separator = separator if separator >= 0 else len(line)
+            properties = line[4:separator].split(",")
+            text = line[separator + 1 :]
+            slide_nr = int(properties[0])
+            ensure_size(slide_nr)
+            for i in range(slide_nr, len(slides)):
+                slides[i].lines.append(Line(text, white))
+        elif line.startswith("#s ") or line.startswith("#t "):
+            l -= 1  # So that the +1 at the return gets us back to this line.
+            break
+        else:
+            # slide_nr = 0 implicitly, i.e. add this line to all slides.
+            for slide in slides:
+                slide.lines.append(Line(line, white))
+    slide_deck.extend(slides)
     return l + 1
 
 
