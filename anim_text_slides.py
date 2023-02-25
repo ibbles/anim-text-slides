@@ -262,19 +262,12 @@ while not request_quit:
                 )
 
     # Update game state.
-    # now = pygame.time.get_ticks()
-    # seconds = now / 1000
-
-    # text_t = max(0.0, min(1.0, (now - text_start_time) / text_duration))
-    # text_location = tuple(map(lambda start, end: int(start + (text_t * (end - start))), text_start, text_end))
+    # Do we have any game state?
 
     # Render.
-    # display.fill(((seconds * 10) % 255, 0, 0))
     display.fill((0, 0, 0))
     slide = slide_deck[current_slide]
     slide.render()
-
-    # display.blit(text_surface, text_location)
     pygame.display.flip()
 
     # Wait for next frame.
