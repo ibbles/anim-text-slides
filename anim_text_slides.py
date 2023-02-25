@@ -126,11 +126,20 @@ class SlideTransition:
         self.start_time = pygame.time.get_ticks()
         self.start_slide: Slide = slide_deck[slide_index - 1]
         self.end_slide: Slide = slide_deck[slide_index + 1]
+        any_new: bool = False
         for row in range(len(self.end_slide.lines)):
-            if any(t.end_line_index == row for t in self.line_transitions):
+            if (
+                any(t.end_line_index == row for t in self.line_transitions)
+                or len(self.end_slide.lines[row].text) == 0
+            ):
                 self.end_slide.lines[row].set_color(gray)
             else:
+                any_new = True
+                self.end_slide.lines[row].set_color(white)
                 self.end_slide.lines[row].fade_in = True
+        if not any_new:
+            for line in self.end_slide.lines:
+                line.set_color(white)
 
     def render(self):
         display.blit(self.end_slide.title.surface, (10, 10))
