@@ -217,7 +217,8 @@ def parse(lines):
     return slide_deck
 
 
-with io.open(sys.argv[1]) as f:
+file: str = sys.argv[1] if len(sys.argv) == 2 else "./test_file.ats"
+with io.open(file) as f:
     slide_deck = parse(f.read().splitlines())
 
 
