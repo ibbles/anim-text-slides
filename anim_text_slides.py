@@ -38,6 +38,7 @@ wanted_fonts = [
 fonts = [f for f in pygame.font.get_fonts() if f in wanted_fonts]
 font_name = fonts[0] if fonts else None
 font = pygame.freetype.SysFont(font_name, 20)
+title_font = pygame.freetype.SysFont(font_name, 50)
 text_surface, text_rect = font.render("Hello World!", (180, 180, 180))
 
 text_start = (1000, 200)  # px
@@ -47,6 +48,17 @@ text_start_time = pygame.time.get_ticks() + 2000  # ms
 
 
 max_line_height = 0
+
+class Title:
+    text: str
+    color: Tuple[int, int, int]
+    surface: pygame.Surface
+    rect: pygame.Rect
+
+    def __init__(self, text: str, color: Tuple[int, int, int]):
+        self.text = text
+        self.color = color
+        self.surface, self.rect = title_font.render(text, color)
 
 class Line:
     text: str
@@ -71,6 +83,7 @@ class Line:
 
 @dataclass
 class Slide:
+    title: Title
     lines: List[Line]
 
     def shown(self, slide_index: int, direction: int):
@@ -82,6 +95,7 @@ class Slide:
             return
 
     def render(self):
+        display.blit(self.title.surface, (0, 0))
         now = pygame.time.get_ticks()
         alpha = 255 * max(0.0, min(1.0, (now - self.start_time) / 500))
         for line in self.lines:
@@ -136,7 +150,7 @@ def parse_slide(lines, i, slide_deck):
     line = lines[i]
     assert line.startswith("#s ")
     title = line[3:]  # TODO: Use title.
-    slide: Slide = Slide([])
+    slide: Slide = Slide(Title(title, white), [])
     row: int = 0
     for l in range(i+1, len(lines)):
         line = lines[l]
