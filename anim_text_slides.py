@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+"""Animated Text Slides
+
+A code presentation tool.
+
+Uses pygame.
+Install using
+    python3 -m pip install -U pygame
+or some variant thereof.
+"""
+
 import pygame
 import pygame.freetype
 
