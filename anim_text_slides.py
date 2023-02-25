@@ -95,7 +95,7 @@ class Slide:
             return
 
     def render(self):
-        display.blit(self.title.surface, (0, 0))
+        display.blit(self.title.surface, (10, 10))
         now = pygame.time.get_ticks()
         alpha = 255 * max(0.0, min(1.0, (now - self.start_time) / 500))
         for line in self.lines:
@@ -133,6 +133,7 @@ class SlideTransition:
                 self.end_slide.lines[row].fade_in = True
 
     def render(self):
+        display.blit(self.end_slide.title.surface, (10, 10))
         now = pygame.time.get_ticks()
         for transition in self.line_transitions:
             start_height = 100 + max_line_height * transition.start_line_index
