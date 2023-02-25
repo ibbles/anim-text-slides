@@ -47,6 +47,7 @@ text_end = (500, 500)  # px
 text_duration = 5000.0  # ms
 text_start_time = pygame.time.get_ticks() + 2000  # ms
 
+animation_duration = 500  # ms
 
 max_line_height = 0
 
@@ -152,13 +153,13 @@ class SlideTransition:
         for transition in self.line_transitions:
             start_height = 100 + max_line_height * transition.start_line_index
             end_height = 100 + max_line_height * transition.end_line_index
-            t = max(0.0, min(1.0, (now - self.start_time) / 1000))
+            t = max(0.0, min(1.0, (now - self.start_time) / animation_duration))
             height = start_height + t * (end_height - start_height)
             display.blit(
                 self.start_slide.lines[transition.start_line_index].surface,
                 (100, height),
             )
-        if now >= self.start_time + 1000:
+        if now >= self.start_time + animation_duration:
             change_slide(self.index + 1, 1)
 
 
